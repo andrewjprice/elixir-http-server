@@ -7,8 +7,9 @@ defmodule Http.Application do
 
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: Http.Worker.start_link(arg)
-      # {Http.Worker, arg}
+      # temporary supervisor to serve requests
+      {Task.Supervisor, name: Http.TaskSupervisor},
+      {Task, fn -> Http.start_link(4040) end}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

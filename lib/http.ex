@@ -5,14 +5,15 @@ defmodule Http do
   def start_link(port) do
     {:ok, socket} = :gen_tcp.listen(port, [:binary, packet: :line, active: false, reuseaddr: true])
     Logger.info("Accepting connections on port: #{port}")
-    # {:ok, spawn_link(Http, :accept, [socket])}
+
     accept(socket)
   end
 
   # handle connections
   defp accept(socket) do
-    {:ok, request} = :gen_tcp.accept(socket)
-    serve(request)
+    {:ok, client} = :gen_tcp.accept(socket)
+    {:ok, pid} = Task.Supervisor.start_child(Http.TaskSupervisor, fn -> serve(client) end)
+    :ok = :gen_tcp.controlling_process(client, pid) # assign child process to control client - to prevent all clients from crashing
     accept(socket)
   end
 
